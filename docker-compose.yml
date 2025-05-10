@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  rpm-repo-mirror:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/data
+      - ./config:/config:rw,z
+    environment:
+      - REPO_CONFIG=/config/repo-config.repo
+    command: ["/bin/bash", "/scripts/mirror-repo.sh"]
+    # command: ["/bin/bash"]

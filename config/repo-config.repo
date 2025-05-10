@@ -1,0 +1,22 @@
+# Repository Configuration for RPM Mirror
+
+# [base]
+# name=Base Repository
+# baseurl=http://mirror.example.com/rpm/base/
+# enabled=1
+# gpgcheck=1
+# gpgkey=http://mirror.example.com/rpm/RPM-GPG-KEY
+
+# [updates]
+# name=Updates Repository
+# baseurl=http://mirror.example.com/rpm/updates/
+# enabled=1
+# gpgcheck=1
+# gpgkey=http://mirror.example.com/rpm/RPM-GPG-KEY
+
+[code]
+name=Visual Studio Code
+baseurl=https://packages.microsoft.com/yumrepos/vscode/
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc
