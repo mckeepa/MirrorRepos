@@ -153,7 +153,7 @@ systemctl --user status container-rpm-repo-mirror
 podman ps
 ```
 
-# Create a time for starting the Service.
+# Create a timer for starting the Service.
 ```bash
 vi ~/.config/systemd/user/container-rpm-repo-mirror-timer.timer
 systemctl --user daemon-reload
