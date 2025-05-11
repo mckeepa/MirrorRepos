@@ -9,7 +9,11 @@ podman rm $(podman ps -aq)
 #sudo podman ps -all
 #sudo podman rm ec47032d334c
 podman build -t rpm-repo-mirror .
-podman run -v /mnt/packages:/mnt/packages:Z -it -p 8081:80 --name rpm-repo-mirror rpm-repo-mirror
+
+podman run -v ./data:/data:Z -it --name rpm-repo-mirror rpm-repo-mirror
+# podman run -v /mnt/packages:/mnt/packages:Z -it -p 8081:80 --name rpm-repo-mirror rpm-repo-mirror
+# podman run -it -p 8081:80 --name rpm-repo-mirror rpm-repo-mirror
+
 
 cd ./webserver
 podman build -t file-browser .

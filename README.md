@@ -72,6 +72,109 @@ This command mounts the `data` directory to persist the mirrored repository data
 
 After running the container, the RPM repositories specified in the `config/repo-config.repo` file will be synchronized to the `data` directory.
 
-## Contributing
+# user setup for start on Boot
 
-Feel free to submit issues or pull requests for improvements or additional features.
+```bash
+sudo useradd repo-code-sv
+sudo passwd repo-code-sv
+
+```
+# add user to group
+```bash
+sudo groupadd podman-repo-mirror
+sudo usermod --append --groups podman-repo-mirror repo-code-sv
+
+```
+
+Allow "service user" account to start a service at system start that persists over logouts.
+
+```bash
+ssh repo-code-sv@localhost
+
+loginctl show-user repo-code-sv | grep ^Linger
+Linger=no
+
+loginctl enable-linger repo-code-sv
+
+loginctl show-user repo-code-sv | grep ^Linger
+Linger=yes
+
+exit
+
+```
+
+## Export Image from Podman
+```bash
+podman export -o redis-container.tar 883504668ec465463bc0fe7e63d53154ac3b696ea8d7b233748918664ea90e57
+
+podman save -o rpm-repo-mirror.tar --format oci-archive rpm-repo-mirror
+mv rpm-repo-mirror.tar /tmp/
+```
+
+## As the (repo-code-sv) service Account, load the OCI Image into the registry 
+```bash
+ssh repo-code-sv@localhost
+podman load -i /tmp/rpm-repo-mirror.tar 
+
+sudo mkdir /data
+sudo mkdir /data/repos
+
+# chown USER:GROUP FILE
+sudo chown repo-code-sv:podman-repo-mirror /data
+sudo chown repo-code-sv:podman-repo-mirror /data/repos
+
+```
+
+
+## Run the Container so and create SYSTEMD
+```bash
+podman run -v /data/repos:/data:Z -it --name rpm-repo-mirror rpm-repo-mirror
+
+podman generate systemd --new --files --name rpm-repo-mirror
+```
+# rootless containers running under Systemd
+
+```bash
+podman generate systemd --name --new rpm-repo-mirror
+
+mkdir -p $HOME/.config/containers/systemd 
+vi $HOME/.config/containers/systemd/container-rpm-repo-mirror.service
+
+mkdir -p ~/.config/systemd/user/
+mv $HOME/.config/containers/systemd/container-rpm-repo-mirror.service ~/.config/systemd/user/
+# $HOME/.config/containers/systemd/container-rpm-repo-mirror.service
+
+systemctl --user daemon-reload
+
+systemctl --user start container-rpm-repo-mirror
+systemctl --user is-active container-rpm-repo-mirror
+systemctl --user status container-rpm-repo-mirror
+
+podman ps
+```
+
+# Create a time for starting the Service.
+```bash
+vi ~/.config/systemd/user/container-rpm-repo-mirror-timer.timer
+systemctl --user daemon-reload
+
+systemctl --user start container-rpm-repo-mirror-timer.timer
+systemctl --user is-active container-rpm-repo-mirror-timer.timer
+systemctl --user status container-rpm-repo-mirror-timer.timer
+
+```
+
+```ini
+[Unit]
+Description=container-rpm-repo-mirror Timer
+Requires=container-rpm-repo-mirror.service
+
+[Timer]
+OnCalendar=*:00/5:00
+Unit=container-rpm-repo-mirror.service
+
+[Install]
+WantedBy=timers.target
+```
+
+

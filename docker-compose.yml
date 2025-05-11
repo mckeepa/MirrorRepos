@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ./data:/data
+      - ./data:/data:rw,z
       - ./config:/config:rw,z
     environment:
       - REPO_CONFIG=/config/repo-config.repo
