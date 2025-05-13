@@ -3,6 +3,8 @@ FROM fedora-minimal:latest
 
 # Install dnf5
 RUN microdnf install -y dnf5 dnf-utils 'dnf5-command(config-manager)' createrepo httpd && microdnf clean all
+# RUN microdnf install -y gawk
+RUN dnf install gawk -y
 
 # Install necessary packages for repository mirroring
 # RUN dnf install -y dnf-utils createrepo httpd && \

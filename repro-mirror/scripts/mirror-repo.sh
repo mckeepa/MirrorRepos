@@ -31,10 +31,7 @@ for repo_id in $repo_ids; do
     # Sync the repository
     echo "Syncing repository: $line"
     #dnf reposync --delete -p /mnt/packages/ --repoid="$repo_id" --newest-only --download-metadata
-    dnf reposync --delete -p ./data/packages/ --repoid="$repo_id" --newest-only --download-metadata
-
-
-
+    dnf reposync --delete -p /data/packages/ --repoid="$repo_id" --newest-only --download-metadata
 done
 
 

@@ -54,15 +54,14 @@ ls -la /mnt/packages/
 
 To build the Docker image, navigate to the project directory and run:
 
-```
+```bash
 docker build -t rpm-repo-mirror .
 ```
 
 ## Running the Container
 
 To run the container, use the following command:
-
-```
+```bash
 docker run --rm -v $(pwd)/data:/data rpm-repo-mirror
 ```
 
@@ -74,12 +73,15 @@ After running the container, the RPM repositories specified in the `config/repo-
 
 # user setup for start on Boot
 
+Use a service account "repo-code-sv"
 ```bash
 sudo useradd repo-code-sv
 sudo passwd repo-code-sv
 
 ```
 # add user to group
+
+Create a group, and add the user 
 ```bash
 sudo groupadd podman-repo-mirror
 sudo usermod --append --groups podman-repo-mirror repo-code-sv
@@ -104,6 +106,7 @@ exit
 ```
 
 ## Export Image from Podman
+Export the build image so it can be load into the profile for the service account or moved to another server
 ```bash
 podman export -o redis-container.tar 883504668ec465463bc0fe7e63d53154ac3b696ea8d7b233748918664ea90e57
 
