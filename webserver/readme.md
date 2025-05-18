@@ -2,13 +2,16 @@
 ```bash
 cd ./webserver
 
-podman stop $(podman ps -q)
-podman rm $(podman ps -aq)
+sudo podman stop $(sudo podman ps -q)
+sudo podman rm $(sudo podman ps -aq)
 
 podman build -t file-browser .
 
+sudo podman run -it -p 8080:80 -v /data/repos:/data:Z --name file-browser file-browser 
 
-podman run -d -p 8080:80 -v /data/repos:/data:Z file-browser
+# podman run -d -p 8080:80 -v /data/repos:/data:Z file-browser
+# podman run -d -p 8080:80 -v /data/repos:/mnt:Z file-browser
+
 ```
 
 
