@@ -2,18 +2,34 @@
 ```bash
 cd ./webserver
 
-sudo podman stop $(sudo podman ps -q)
-sudo podman rm $(sudo podman ps -aq)
+#sudo podman stop $(sudo podman ps -q)
+sudo podman stop $(sudo podman ps -aq -f name=file-browser)
 
-podman build -t file-browser .
+#sudo podman rm $(sudo podman ps -aq)
+sudo podman rm $(sudo podman ps -aq -f name=file-browser)
 
-sudo podman run -it -p 8080:80 -v /data/repos:/data:Z --name file-browser file-browser 
+sudo podman build -t file-browser .
+sudo podman run -it -p 8080:80 -v ../repo-mirror/data:/data:ro --name file-browser file-browser 
 
 # podman run -d -p 8080:80 -v /data/repos:/data:Z file-browser
 # podman run -d -p 8080:80 -v /data/repos:/mnt:Z file-browser
 
 ```
 
+## Export image and load into local Image Regsitry
+```bash
+podman image list 
+# or
+podman image list --no-trunc
+
+# podman save -o oci-alpine.tar --format oci-archive alpine
+podman save -o file-browser.tar --format oci-archive localhost/file-browser
+
+#remove ALL Local images -a (all) -f (force)c
+podman rmi -a -f
+
+podman load -i file-browser.tar
+```
 
 ## Run the Container so and create SYSTEMD
 ```bash

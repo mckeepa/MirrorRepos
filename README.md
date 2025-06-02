@@ -39,6 +39,8 @@ sudo usermod --append --groups podman-repo-mirror <userid2>
 
 # verify users have been added
 grep 'podman-repo-mirror' /etc/group
+
+
 ```
 
 ## Grant Group access to volume
@@ -55,14 +57,15 @@ ls -la /mnt/packages/
 To build the Docker image, navigate to the project directory and run:
 
 ```bash
-docker build -t rpm-repo-mirror .
+podman build -t rpm-repo-mirror-base .
 ```
 
 ## Running the Container
 
-To run the container, use the following command:
+Create a base image with the latest updates as 
+To run the container to create the base image, use the following command:
 ```bash
-docker run --rm -v $(pwd)/data:/data rpm-repo-mirror
+docker run --rm -v $(pwd)/data:/data rpm-repo-mirror-base
 ```
 
 This command mounts the `data` directory to persist the mirrored repository data.
@@ -86,6 +89,9 @@ Create a group, and add the user
 sudo groupadd podman-repo-mirror
 sudo usermod --append --groups podman-repo-mirror repo-code-sv
 
+# verify user works
+su -l repo-code-sv
+podman ps
 ```
 
 Allow "service user" account to start a service at system start that persists over logouts.
@@ -108,7 +114,9 @@ exit
 ## Export Image from Podman
 Export the build image so it can be load into the profile for the service account or moved to another server
 ```bash
-podman export -o redis-container.tar 883504668ec465463bc0fe7e63d53154ac3b696ea8d7b233748918664ea90e57
+
+podman images  -a fedora/fedora-minimal --no-trunc
+podman export -o quay.io_fedora_fedora-minimal_43-x86_64.tar sha256:cc3a8d84b8c80a5cea864e90ec58dec86d50ce78aec13bd1a0be45aa95cf3e59
 
 podman save -o rpm-repo-mirror.tar --format oci-archive rpm-repo-mirror
 mv rpm-repo-mirror.tar /tmp/

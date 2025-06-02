@@ -2,11 +2,15 @@
 
 # Load repository configuration
 # REPO_CONFIG="/config/repo-config.repo"
-REPO_CONFIG="/etc/yum.repos.d/repo-config.repo"
+# REPO_CONFIG="/etc/yum.repos.d/repo-config.repo"
+ALL_REPOS="/config/all.repos"
+
+file_path="/etc/dnf/dnf.conf"
+cat "$file_path"
 
 # Check if the configuration file exists
-if [[ ! -f $REPO_CONFIG ]]; then
-    echo "Repository configuration file not found: $REPO_CONFIG"
+if [[ ! -f $ALL_REPOS ]]; then
+    echo "Repository configuration file not found: $ALL_REPOS"
     exit 1
 fi
 
@@ -23,7 +27,7 @@ done
 
 
 # get the contents inside the []
-repo_ids=$(grep -oP '^\[\K[^\]]+' "$REPO_CONFIG")
+repo_ids=$(grep -oP '^\[\K[^\]]+' "$ALL_REPOS")
 for repo_id in $repo_ids; do
     echo "Enabling repository: $repo_id"
     dnf config-manager setopt "$repo_id".enabled=1
@@ -31,7 +35,7 @@ for repo_id in $repo_ids; do
     # Sync the repository
     echo "Syncing repository: $line"
     #dnf reposync --delete -p /mnt/packages/ --repoid="$repo_id" --newest-only --download-metadata
-    dnf reposync --delete -p /data/packages/ --repoid="$repo_id" --newest-only --download-metadata
+    dnf reposync -p /data/packages/ --repoid="$repo_id" --newest-only --download-metadata
 done
 
 

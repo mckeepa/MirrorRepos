@@ -2,10 +2,10 @@
 
 # [base]
 # name=Base Repository
-# baseurl=http://mirror.example.com/rpm/base/
+# baseurl=https://dl.rockylinux.org/pub/rocky/8/
 # enabled=1
 # gpgcheck=1
-# gpgkey=http://mirror.example.com/rpm/RPM-GPG-KEY
+# gpgkey=https://dl.rockylinux.org/pub/rocky/RPM-GPG-KEY-Rocky-8
 
 # [updates]
 # name=Updates Repository
