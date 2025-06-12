@@ -25,6 +25,14 @@ podman image list --no-trunc
 # podman save -o oci-alpine.tar --format oci-archive alpine
 podman save -o file-browser.tar --format oci-archive localhost/file-browser
 
+
+podman save -o docker.io-library-httpd-alpine.tar --format oci-archive docker.io/library/httpd:alpine
+podman save -o file-browser.tar --format oci-archive localhost/file-browser:latest
+
+podman save -o fedora-minimal.tar --format oci-archive quay.io/fedora/fedora-minimal:43-x86_64
+podman save -o rpm-repo-mirror-base.tar --format oci-archive localhost/rpm-repo-mirror-base:latest
+podman save -o rpm-repo-mirror.tar --format oci-archive localhost/rpm-repo-mirror:latest
+
 #remove ALL Local images -a (all) -f (force)c
 podman rmi -a -f
 
