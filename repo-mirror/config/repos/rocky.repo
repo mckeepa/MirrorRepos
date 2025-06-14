@@ -11,9 +11,10 @@
 [rocky-9.6-x86_64-baseos]
 name=Rocky Linux $releasever - BaseOS
 #mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=BaseOS-$releasever$rltype
-mirrorlist=https://mirrors.rockylinux.org/mirrorlist?repo=rocky-BaseOS-9.5&arch=x86_64
+# mirrorlist=https://mirrors.rockylinux.org/mirrorlist?repo=rocky-BaseOS-9.6&arch=x86_64
 #baseurl=http://dl.rockylinux.org/$contentdir/$releasever/BaseOS/$basearch/os/
-baseurl=http://dl.rockylinux.org/pub/rocky/9.5/BaseOS/x86_64/os/
+#baseurl=http://dl.rockylinux.org/pub/rocky/9.5/BaseOS/x86_64/os/
+baseurl=http://dl.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/
 gpgcheck=1
 enabled=1
 countme=1

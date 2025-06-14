@@ -3,8 +3,8 @@
 
 # Using ROOTLESS
 #stop all running containers
-podman stop $(podman ps -q -f name=rpm-repo-mirror-base)
-podman rm $(podman ps -aq -f name=rpm-repo-mirror-base)
+#podman stop $(podman ps -q -f name=rpm-repo-mirror-base)
+#podman rm $(podman ps -aq -f name=rpm-repo-mirror-base)
 
 
 #sudo podman ps -all
@@ -12,7 +12,8 @@ podman rm $(podman ps -aq -f name=rpm-repo-mirror-base)
 podman build -t rpm-repo-mirror-base .
 
 mkdir data
-podman run -v ./data:/data:z -it --name rpm-repo-mirror-base rpm-repo-mirror-base
+# podman run -v ./data:/data:z -it --name rpm-repo-mirror-base rpm-repo-mirror-base
+podman run -v /data/repo:/data:z -v /data/log:/var/log/:z  -it --name rpm-repo-mirror rpm-repo-mirror
 # podman run -v /mnt/packages:/mnt/packages:Z -it -p 8081:80 --name rpm-repo-mirror rpm-repo-mirror
 # podman run -it -p 8081:80 --name rpm-repo-mirror rpm-repo-mirror
 

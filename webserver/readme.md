@@ -9,7 +9,7 @@ sudo podman stop $(sudo podman ps -aq -f name=file-browser)
 sudo podman rm $(sudo podman ps -aq -f name=file-browser)
 
 sudo podman build -t file-browser .
-sudo podman run -it -p 8080:80 -v ../repo-mirror/data:/data:ro --name file-browser file-browser 
+sudo podman run -it -p 8080:80 -v /data/repo/packages:/data/packages/:ro --name file-browser file-browser 
 
 # podman run -d -p 8080:80 -v /data/repos:/data:Z file-browser
 # podman run -d -p 8080:80 -v /data/repos:/mnt:Z file-browser

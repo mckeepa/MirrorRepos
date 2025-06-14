@@ -31,11 +31,15 @@ repo_ids=$(grep -oP '^\[\K[^\]]+' "$ALL_REPOS")
 for repo_id in $repo_ids; do
     echo "Enabling repository: $repo_id"
     dnf config-manager setopt "$repo_id".enabled=1
+done
 
+
+for repo_id in $repo_ids; do
     # Sync the repository
-    echo "Syncing repository: $line"
+    echo "Syncing repository: $repo_id"
     #dnf reposync --delete -p /mnt/packages/ --repoid="$repo_id" --newest-only --download-metadata
     dnf reposync -p /data/packages/ --repoid="$repo_id" --newest-only --download-metadata
+    echo "Completed Syncing repository: $repo_id"
 done
 
 

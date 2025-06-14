@@ -1,0 +1,7 @@
+[Container]
+ContainerName=rpm-repo-mirror
+Image=localhost/rpm-repo-mirror
+Volume=/data:/data:Z
+
+[Service]
+Restart=always
