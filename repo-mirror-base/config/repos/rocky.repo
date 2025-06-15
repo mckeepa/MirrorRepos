@@ -1,0 +1,44 @@
+# rocky.repo
+#
+# The mirrorlist system uses the connecting IP address of the client and the
+# update status of each mirror to pick current mirrors that are geographically
+# close to the client.  You should use this for Rocky updates unless you are
+# manually picking other mirrors.
+#
+# If the mirrorlist does not work for you, you can try the commented out
+# baseurl line instead.
+
+[rocky-9.6-x86_64-baseos]
+name=Rocky Linux $releasever - BaseOS
+#mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=BaseOS-$releasever$rltype
+# mirrorlist=https://mirrors.rockylinux.org/mirrorlist?repo=rocky-BaseOS-9.6&arch=x86_64
+#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/BaseOS/$basearch/os/
+#baseurl=http://dl.rockylinux.org/pub/rocky/9.5/BaseOS/x86_64/os/
+baseurl=http://dl.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/
+gpgcheck=1
+enabled=1
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
+
+# [rocky-9.6-x86_64-appstream]
+# name=Rocky Linux $releasever - AppStream
+# mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=x86_64&repo=AppStream-9.5
+# #baseurl=http://dl.rockylinux.org/$contentdir/$releasever/AppStream/$basearch/os/
+# baseurl=http://dl.rockylinux.org/pub/rocky/9.5/AppStream/x86_64/os/
+# gpgcheck=1
+# enabled=1
+# countme=1
+# metadata_expire=6h
+# gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
+
+# [rocky-9.6-x86_64-crb]
+# name=Rocky Linux $releasever - CRB
+# mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=x86_64&repo=CRB-9.5
+# #baseurl=http://dl.rockylinux.org/$contentdir/$releasever/CRB/$basearch/os/
+# baseurl=http://dl.rockylinux.org/pub/rocky/9.5/CRB/x86_64/os/
+# gpgcheck=1
+# enabled=0
+# countme=1
+# metadata_expire=6h
+# gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
