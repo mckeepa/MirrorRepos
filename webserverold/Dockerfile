@@ -2,7 +2,7 @@
 FROM httpd:alpine
 
 # Expose the directory /mnt/packages to the web server
-RUN mkdir -p /mnt/packages
+RUN mkdir -p /data/packages
 # RUN  chcon -R -t httpd_sys_content_t /mnt/packages
 # RUN  chcon -R -t httpd_sys_content_t /data/packages
 
@@ -19,7 +19,8 @@ COPY ./httpd.conf /usr/local/apache2/conf/httpd.conf
 # RUN echo 'Options +Indexes' >> /usr/local/apache2/conf/httpd.conf
 
 # Expose port 80 for the web server
-EXPOSE 80
+EXPOSE 8080 8443
+
 
 # Set the default command to start the httpd server
 CMD ["httpd-foreground"]

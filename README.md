@@ -39,14 +39,18 @@ sudo cat /etc/subuid
 ```
 Allocate Sub UserIds
 ```bash
-sudo  usermod --add-subuids 200000-201000 --add-subgids 200000-201000 <userid>
+sudo useradd repo-mirror-sv
+sudo passwd repo-mirror-sv
+
+sudo  usermod --add-subuids 200000-201999 --add-subgids 200000-201999 repo-mirror-sv
+sudo  usermod --add-subuids 202000-202999 --add-subgids 202000-202999 <userid>
 podman ps
 ```
 
 Create a new Linux Group to access resources
 ```bash
 sudo groupadd podman-repo-mirror 
-sudo usermod --append --groups podman-repo-mirror <userid1>
+sudo usermod --append --groups podman-repo-mirror repo-mirror-sv
 sudo usermod --append --groups podman-repo-mirror <userid2>
 
 # verify users have been added
@@ -55,18 +59,44 @@ grep 'podman-repo-mirror' /etc/group
 
 Grant Group access to directories on the host
 ```bash
-sudo chown -R :podman-repo-mirror /mnt/packages
+sudo mkdir /data/repo-mirror
+sudo mkdir /data/log
+sudo mkdir /data/config
+
+
+sudo chown -R repo-mirror-sv:podman-repo-mirror /data/repo-mirror
+sudo chown -R repo-mirror-sv:podman-repo-mirror /data/log
+sudo chown -R repo-mirror-sv:podman-repo-mirror /data/config
+
+```
+
+|flag|description |Permission|
+|-----|---|------------|
+|d    |directory| |
+|r    |<span style="color:red;">Owner</span>| can read |
+|w    |<span style="color:red;">Owner</span>| can Write|
+|x    |<span style="color:red;">Owner</span> | can Execute files and list dir content|
+|r    |<span style="color:blue;">Group memebers</span> |can read|
+|-    |<span style="color:blue;">Group memebers</span> |can NOT write|
+|x    |<span style="color:blue;">Group memebers</span> |can Execute files and list dir content|
+|r    |<span style="color:green;">Other users</span>|can read|
+|-    |<span style="color:green;">Other users</span>|can NOT write|
+|x    |<span style="color:green;">Other users</span>|can Execute files and list dir content|
+
+drwxr-xr-x. 2 root podman-repo-mirror
+
+
+
+```bash
 # Verify Ownership has changed
-ls -la /mnt/
-ls -la /mnt/packages/
+ls -la /data/
+ls -la /data/repo-mirror/
 ```
 
 
-## Building the repo-mirror Image
-To build the base  image, navigate to the project directory and run:
 
 
-## Project Structure
+## repo-mirror Image Project Structure
 
 - **Dockerfile**: Contains instructions to build the Docker image for the RPM repository mirror.
 - **scripts/mirror-repo.sh**: Script responsible for syncing the RPM repositories using `dnf` or `yum`.
@@ -75,13 +105,15 @@ To build the base  image, navigate to the project directory and run:
 - **docker-compose.yml**: Defines services, networks, and volumes for the Docker application.
 - **README.md**: Documentation for building and running the Docker container.
 
+## Building base image 
+To build the base  image, navigate to the project directory and run:
 
-Build the base Image first
+First build the base Image
 ```bash
 podman build -t rpm-repo-mirror-base ./repo-mirror-base
 ```
 
-Before building `repo-mirror` project, update sure the correct Repos are configure for mirroring: 
+Before building `repo-mirror` project, update to ensure  the correct Repos are configure for mirroring: 
   - ./repo-mirror-base/config/all.repos
   - ./repo-mirror-base/config/repos
 
@@ -117,23 +149,40 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 ```bash
 podman build -t rpm-repo-mirror ./repo-mirror
 ```
+### Export image so Service Account can use it
+
+```bash
+podman save -o /tmp/rpm-repo-mirror.tar --format oci-archive rpm-repo-mirror
+ssh repo-mirror-sv@localhost
+podman load -i /tmp/rpm-repo-mirror.tar 
+```
+
+
 ### Running the Container
 
-Create a base image with the latest updates as 
-To run the container with these volumes:
+The images should now have the latest updates and it's ready to run.  
+Run the container with these volumes:
   - /data     -> directory to persist the mirrored repository data.
   - /var/log/:z -> Logs
 
 ```bash
-podman run --rm -v /data/repo:/data:z -v /data/log:/var/log/:z  -it --name rpm-repo-mirror rpm-repo-mirror
+# sudo su repo-mirror-sv
+
+podman run --rm -v /data/repo-mirror:/data:z -v /data/log:/var/log/:z  -it --name rpm-repo-mirror rpm-repo-mirror
 ```
 
-### Usage
+### Watch running logs
+```bash
+tail -f /data/log/mirror-repo-entry.log 
+tail -f /data/log/dnf5.log 
+```
 
-After running the container, the RPM repositories specified in the `config/repo-config.repo` file will be synchronized to the `data` directory.
+### Results
+
+After running the container, the RPM repositories specified in `config/repo-config.repo` file will be synchronized to the `data` directory.
 
 
-## Build the Web Server
+# Build the Web Server
 
 Non-root can't use standard ports like 443 or 80, 
 sothe website could be: 
@@ -141,9 +190,43 @@ sothe website could be:
   - run as root / privileged user
   - Place a Proxy such as Nginx to 443    
 
+To srsolve the issue, update the iptable to route 443 to 8443
+
+Set a rule that redirects all incoming HTTP (TCP port 80) traffic to TCP port 8080 on the same machine, before routing decisions are made.
+
+This is commonly used when:
+
+    Running a service (e.g., a web server or proxy) on a non-privileged port like 8080.
+
+    You want it to be accessible via the standard port 80 without giving the service root privileges.
+
+```bash
+# Add rules:
+sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443
+
+# The PREROUTING chain only affects packets coming from outside the host (i.e., not from localhost).
+# If you are testing with curl http://localhost or a browser on the same machine, use the OUTPUT chain instead:
+sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to-port 8080
+
+
+# show it worked
+sudo iptables -t nat -L -n -v
+# or just the Prerouting rules 
+sudo iptables -t nat -L PREROUTING -n -v
+
+# DELETE rules:
+sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+sudo iptables -t nat -D PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8443
+
+```
+
 In this example it will be run it as root. 
 ```bash
-sudo podman build -t file-browser ./webserver
+podman build -t file-browser ./webserver
+
+# Save Image so it can be loaded
+podman save -o /tmp/file-browser.tar --format oci-archive file-browser
 ```
 
 
@@ -155,8 +238,8 @@ sudo podman build -t file-browser ./webserver
 
 Use a service account `repo-code-sv`
 ```bash
-sudo useradd repo-code-sv
-sudo passwd repo-code-sv
+sudo useradd repo-browser-sv
+sudo passwd repo-browser-sv
 
 ```
 ## add user to group
@@ -164,28 +247,38 @@ sudo passwd repo-code-sv
 Create a group, and add the user 
 ```bash
 sudo groupadd podman-repo-mirror
-sudo usermod --append --groups podman-repo-mirror repo-code-sv
+sudo usermod --append --groups podman-repo-mirror repo-browser-sv
 
 # verify user works
-su -l repo-code-sv
+su -l repo-browser-sv
 podman ps
 ```
 
 Allow `service user` account to start a service at system start that persists over logouts.
 
 ```bash
-ssh repo-code-sv@localhost
+ssh repo-browser-sv@localhost
 
-loginctl show-user repo-code-sv | grep ^Linger
+loginctl show-user repo-browser-sv | grep ^Linger
 Linger=no
 
-loginctl enable-linger repo-code-sv
+loginctl enable-linger repo-browser-sv
 
-loginctl show-user repo-code-sv | grep ^Linger
+loginctl show-user repo-browser-sv | grep ^Linger
 Linger=yes
 
 exit
 ```
+
+## run the HTTP Server
+
+Confirm the web Server works
+```bash
+
+podman load -i /tmp/file-browser.tar
+
+podman run -d --name my-httpd -p 8080:80   -v /data/repo-mirror/:/data/:Z  file-browser
+``` 
 
 ## Export Image from Podman
 Export the build image so it can be load into the profile for the service account or moved to another server
