@@ -16,7 +16,13 @@ COPY scripts/mirror-repo.sh /usr/local/bin/mirror-repo.sh
 
 # Add the cron job
 RUN mkdir -p /etc/cron.d
-RUN echo "0 * * * * /usr/local/bin/mirror-repo.sh >> /var/log/mirror-repo.log 2>&1" > /etc/cron.d/mirror-repo
+
+# Run every hour on the hour
+# RUN echo "0 * * * * /usr/local/bin/mirror-repo.sh >> /var/log/mirror-repo.log 2>&1" > /etc/cron.d/mirror-repo
+
+# run every 5 minutes
+RUN echo "*/5 * * * * /usr/local/bin/mirror-repo.sh >> /var/log/mirror-repo.log 2>&1" > /etc/cron.d/mirror-repo
+
 
 RUN chmod 0644 /etc/cron.d/mirror-repo 
 RUN crontab /etc/cron.d/mirror-repo
@@ -31,5 +37,8 @@ CMD ["crond", "-n"]
 RUN chmod +x /usr/local/bin/mirror-repo.sh
 
 # Set the entry point for the container
-ENTRYPOINT ["sh", "-c",  "/usr/local/bin/mirror-repo.sh >> /var/log/mirror-repo-entry.log 2>&1"]
+# ENTRYPOINT ["sh", "-c",  "/usr/local/bin/mirror-repo.sh >> /var/log/mirror-repo-entry.log 2>&1"]
+# ...existing code...
+# ENTRYPOINT ["sh", "-c", "/usr/local/bin/mirror-repo.sh >> /var/log/mirror-repo-entry.log 2>&1; tail -f /dev/null"]
+# ...existing code...
 #ENTRYPOINT ["/bin/bash"]
