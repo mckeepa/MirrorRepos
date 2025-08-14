@@ -211,7 +211,20 @@ sudo chown repo-code-sv:podman-repo-mirror /data
 sudo chown repo-code-sv:podman-repo-mirror /data/repos
 
 ```
+ ### Another Example 
+```bash
+podman pull ghcr.io/steele-ntwrk/custom-netbox-dtli:offline
+podman images  -a ghcr.io/steele-ntwrk/custom-netbox-dtli --no-trunc
+podman save -o custom-netbox-dtli.tar --format oci-archive sha256:7e3329d675895dc1834cda96f8b8ddfd2eea5ff7614a61fbd705617ce05137f3
 
+# Get it off the vm and on to a desktop
+scp paul@192.168.122.243:/home/paul/custom-netbox-dtli.tar   /tmp/
+
+# On target machine 
+podman load -i  custom-netbox-dtli.tar  
+
+
+```
 
 ## Run the Container so and create SYSTEMD
 ```bash
