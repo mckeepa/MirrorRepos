@@ -12,6 +12,8 @@ podman rm $(podman ps -aq -f name=rpm-repo-mirror)
 podman build -t rpm-repo-mirror .
 
 mkdir data
+cp -r  repo-mirror/config/ /data/
+
 # podman run -v /data:/data:z -it --name rpm-repo-mirror rpm-repo-mirror
 podman run -v /data/repo:/data:z -v /data/log:/var/log/:z  -it --name rpm-repo-mirror rpm-repo-mirror
 

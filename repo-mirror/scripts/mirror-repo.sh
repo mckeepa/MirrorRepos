@@ -3,6 +3,7 @@
 # Load repository configuration
 # REPO_CONFIG="/config/repo-config.repo"
 # REPO_CONFIG="/etc/yum.repos.d/repo-config.repo"
+cp /config/repos/* /etc/yum.repos.d/
 ALL_REPOS="/config/all.repos"
 
 file_path="/etc/dnf/dnf.conf"

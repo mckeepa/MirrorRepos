@@ -61,8 +61,11 @@ Grant Group access to directories on the host
 ```bash
 sudo mkdir /data/repo-mirror
 sudo mkdir /data/log
-sudo mkdir /data/config
 
+# The /data/config will be a mounted volume on /config in the contaner.
+# this is so the repos can be updated with rebuilding the container image. 
+sudo mkdir /data/config
+cp -r MirrorRepos/repo-mirror/config/ /data/
 
 sudo chown -R repo-mirror-sv:podman-repo-mirror /data/repo-mirror
 sudo chown -R repo-mirror-sv:podman-repo-mirror /data/log
@@ -92,9 +95,6 @@ drwxr-xr-x. 2 root podman-repo-mirror
 ls -la /data/
 ls -la /data/repo-mirror/
 ```
-
-
-
 
 ## repo-mirror Image Project Structure
 
@@ -164,11 +164,12 @@ The images should now have the latest updates and it's ready to run.
 Run the container with these volumes:
   - /data     -> directory to persist the mirrored repository data.
   - /var/log/:z -> Logs
+  - /config  ->  /config
 
 ```bash
 # sudo su repo-mirror-sv
 
-podman run --rm -v /data/repo-mirror:/data:z -v /data/log:/var/log/:z  -it --name rpm-repo-mirror rpm-repo-mirror
+podman run --rm -v /data/repo:/data:z -v /data/log:/var/log/:z -v /data/config:/config:z  -it --name rpm-repo-mirror rpm-repo-mirror
 ```
 
 ### Watch running logs
@@ -304,7 +305,7 @@ sudo chown repo-code-sv:podman-repo-mirror /data
 sudo chown repo-code-sv:podman-repo-mirror /data/repos
 
 ```
- ### Another Example 
+ ### Another Example of exporting images
 ```bash
 podman pull ghcr.io/steele-ntwrk/custom-netbox-dtli:offline
 podman images  -a ghcr.io/steele-ntwrk/custom-netbox-dtli --no-trunc

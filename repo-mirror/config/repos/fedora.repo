@@ -1,0 +1,11 @@
+
+
+
+[Fedora-42-x86_64-os]
+name=Fedora Linux 42 - OS
+baseurl=https://download1.rpmfusion.org/free/fedora/releases/42/Everything/x86_64/os/
+gpgcheck=1
+enabled=1
+countme=1
+metadata_expire=6h
+gpgkey=https://download1.rpmfusion.org/free/fedora/RPM-GPG-KEY-rpmfusion-free-fedora-2020
