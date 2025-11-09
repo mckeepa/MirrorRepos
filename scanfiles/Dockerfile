@@ -1,7 +1,8 @@
 FROM python:3.12-alpine
 
 # Install pip3 (already included in python:alpine), and git (required for some pip installs)
-RUN apk add --no-cache git
+# RUN apk add --no-cache git
+RUN apk add --no-cache git clamav clamav-libunrar
 
 # Install cvdupdate using pip3
 RUN pip3 install --no-cache-dir cvdupdate
