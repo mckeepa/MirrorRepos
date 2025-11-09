@@ -13,7 +13,7 @@ RUN ls -la /etc/yum.repos.d/
 
 # Copy the mirror script into the container
 COPY scripts/mirror-repo.sh /usr/local/bin/mirror-repo.sh
-RUN chmod +x /usr/local/bin/mirror-repo.sh
+
 
 # Add the cron job
 RUN mkdir -p /etc/cron.d
