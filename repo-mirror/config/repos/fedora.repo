@@ -3,7 +3,7 @@
 
 [Fedora-42-x86_64-os]
 name=Fedora Linux 42 - OS
-baseurl=https://download1.rpmfusion.org/free/fedora/releases/42/Everything/x86_64/os/
+baseurl=https://download1.rpmfusion.org/free/fedora/releases/$releasever/Everything/$basearch/os/
 gpgcheck=1
 enabled=1
 countme=1

@@ -111,6 +111,9 @@ To build the base  image, navigate to the project directory and run:
 First build the base Image
 ```bash
 podman build -t rpm-repo-mirror-base ./repo-mirror-base
+# or with no-cache
+podman build --no-cache -t rpm-repo-mirror-base ./repo-mirror-base
+
 ```
 
 Before building `repo-mirror` project, update to ensure  the correct Repos are configure for mirroring: 
@@ -148,6 +151,9 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 ### Build the image
 ```bash
 podman build -t rpm-repo-mirror ./repo-mirror
+# or
+podman build --no-cache -t rpm-repo-mirror ./repo-mirror
+
 ```
 ### Export image so Service Account can use it
 
@@ -371,3 +377,41 @@ systemctl --user start container-rpm-repo-mirror-timer.timer
 systemctl --user is-active container-rpm-repo-mirror-timer.timer
 systemctl --user status container-rpm-repo-mirror-timer.timer
 ```
+
+dnf reposync \
+    -p /data/packages/ \
+    --repoid="$repo_id" \
+    --newest-only \
+    --download-metadata \
+    --setopt="$repo_id.basearch=x86_64" \
+    --setopt="$repo_id.releasever=8" 
+    --setopt="$repo_id.infra=stock" \
+    --setopt="$repo_id.contentdir=pub/epel"
+
+dnf reposync \
+  --repoid=epel-cisco-openh264 \
+  --releasever=8 \
+  --download-metadata \
+  --download-path=/data/packages/
+
+
+dnf reposync   --repoid=epel-cisco-openh264  --newest-only --releasever=8  --basearch=x86_64  --download-metadata   --download-path=/data/packages/
+
+
+dnf reposync \
+  --repoid=epel-cisco-openh264 \
+  --releasever=9 \
+  --newest-only \
+  --setopt=basearch=x86_64 \
+  --download-metadata \
+  --download-path=/data/packages/
+
+
+dnf reposync \
+  --repoid=epel-cisco-openh264 \
+  --releasever=9 \
+  --forcearch=x86_64 \
+  --download-metadata \
+  --newest-only \
+  --delete \
+  --download-path=/data/packages/

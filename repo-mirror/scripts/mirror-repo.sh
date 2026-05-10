@@ -28,20 +28,61 @@ done
 
 
 # get the contents inside the []
-repo_ids=$(grep -oP '^\[\K[^\]]+' "$ALL_REPOS")
-for repo_id in $repo_ids; do
-    echo "Enabling repository: $repo_id"
-    dnf config-manager setopt "$repo_id".enabled=1
+#repo_ids=$(grep -oP '^\[\K[^\]]+' "$ALL_REPOS")
+#for repo_id in $repo_ids; do
+#    echo "Enabling repository: $repo_id"
+#    dnf config-manager setopt "$repo_id".enabled=1
+#done
+
+
+#for repo_id in $repo_ids; do
+
+# Read header
+IFS=',' read -r repoId_h releasever_h basearch_h < "$ALL_REPOS"
+
+# Loop over remaining lines
+tail -n +2 "$ALL_REPOS" | while IFS=',' read -r repoId releasever basearch; do
+    # Trim whitespace
+    repoId="${repoId//[[:space:]]/}"
+    releasever="${releasever//[[:space:]]/}"
+    basearch="${basearch//[[:space:]]/}"
+
+    # Remove surrounding brackets from repoId
+    repoId="${repoId#[}"
+    repoId="${repoId%]}"
+
+    echo "repoId=$repoId"
+    echo "releasever=$releasever"
+    echo "basearch=$basearch"
+
+    echo "Enabling repository: $repoId"
+    dnf config-manager setopt "$repoId".enabled=1
+
+    echo "dnf reposync --repoid=$repoId --releasever=$releasever --forcearch=$basearch --download-metadata --newest-only --delete --download-path=/data/packages/"
+
+    dnf reposync --repoid=$repoId --releasever=$releasever --forcearch=$basearch --download-metadata --newest-only --delete --download-path=/data/packages/
+ 
+    echo "---------------- COMPLETED $repoId $releasever $basearch -------------------"
 done
 
 
-for repo_id in $repo_ids; do
     # Sync the repository
-    echo "Syncing repository: $repo_id"
+    #echo "Syncing repository: $repo_id"
     #dnf reposync --delete -p /mnt/packages/ --repoid="$repo_id" --newest-only --download-metadata
-    dnf reposync -p /data/packages/ --repoid="$repo_id" --newest-only --download-metadata
-    echo "Completed Syncing repository: $repo_id"
-done
+    #dnf reposync -p /data/packages/ --repoid="$repo_id" --newest-only --download-metadata
+    
+    # dnf reposync \
+    # --repoid=epel-cisco-openh264 \
+    # --releasever=9 \
+    # --forcearch=x86_64 \
+    # --download-metadata \
+    # --newest-only \
+    # --delete \
+    # --download-path=/data/packages/
+
+
+#     echo "Completed Syncing repository: $repo_id"
+# #done
 
 
 # # Read repository URLs from the configuration file

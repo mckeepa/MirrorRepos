@@ -1,0 +1,4 @@
+[mirror.aarnet.edu.au_pub_epel_9_Everything_x86_64_repodata_]
+name=created by dnf config-manager from https://mirror.aarnet.edu.au/pub/epel/9/Everything/x86_64/repodata/
+baseurl=https://mirror.aarnet.edu.au/pub/epel/9/Everything/x86_64/repodata/
+enabled=1

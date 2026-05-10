@@ -1,5 +1,12 @@
-[code]
-[rocky-9.6-x86_64-baseos]
-[vscode-el10]
-[Fedora-42-x86_64-os]
-
+repoId,releasever ,basearch
+[code], 8, x86_64 
+[rocky-9.6-x86_64-baseos], 8, x86_64
+[rocky-10-x86_64-baseos], 10, x86_64
+[vscode-el10],10, x86_64
+[Fedora], 44, x86_64
+[highavailability], 8, x86_64 
+[epel-cisco-openh264], 44, x86_64 
+[epel-testing], 8, x86_64 
+[epel], 8, x86_64 
+[mirror.aarnet.edu.au_pub_epel_9_Everything_x86_64_], 9, x86_64 
+[mirror.aarnet.edu.au_pub_epel_9_Everything_x86_64_repodata_], 9, x86_64 
