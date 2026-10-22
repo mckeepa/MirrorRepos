@@ -7,6 +7,7 @@ This project provides a Container-based solution for creating a mirror of an RPM
 |------------------|-----------------------------------|
 |**Repo-Mirror-Base:** | Used as a base for `Repo-Mirror`, the base is fedora-minimal and including all updates from date the base image is created image.|
 |**Repo-Mirror:**  | Includes Script to register repos, and to download repos to a `/data/packages/`. This Directory is a mounted volume. |
+|**Terraform-Mirror:** | Mirrors Terraform providers from `registry.terraform.io` using `terraform providers mirror` into `/data/packages/terraform/`. Configured via `config/all.providers`. |
 |**scan files:**   | uses ClamAV to scan `/scan` directory and move files that fail into the `/quarantine`. Before Scanning ClamAv updates it's  database from the directory `/clamav-db`.  The three directories are passed in as volumes.|
 |**Web-Server:**   | Website to expose the downloaded files. Uses Apache HTTPD, exposed contents on `/data/packages/` from web server.|
 
@@ -15,6 +16,7 @@ This project provides a Container-based solution for creating a mirror of an RPM
 
 # Containers Used
   - Mirror repos using DNF base => ` localhost/rpm-repo-mirror-base:latest` => `quay.io/fedora/fedora-minimal:43-x86_64`
+  - Mirror Terraform providers => `localhost/terraform-mirror` => `localhost/rpm-repo-mirror-base:latest`
   - Scan files  =>  `python:3.12-alpine`
   - Expose files via Web Server  => `httpd:alpine`
 

@@ -1,0 +1,8 @@
+[Container]
+ContainerName=terraform-mirror
+Image=localhost/terraform-mirror
+Volume=/data:/data:Z
+Volume=/data/config-terraform:/config:Z
+
+[Service]
+Restart=always

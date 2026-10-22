@@ -1,0 +1,5 @@
+module,version
+terraform-aws-modules/vpc/aws, 5.13.0
+terraform-aws-modules/vpc/aws, 5.8.1
+terraform-aws-modules/security-group/aws, latest
+# terraform-aws-modules/eks/aws, 20.24.0

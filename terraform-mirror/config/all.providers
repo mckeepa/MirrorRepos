@@ -1,0 +1,6 @@
+provider,version,platforms
+hashicorp/aws, 5.70.0, linux_amd64
+hashicorp/aws, 5.49.0, linux_amd64
+hashicorp/azurerm, latest, linux_amd64
+hashicorp/random, 3.6.3, linux_amd64
+# hashicorp/kubernetes, 2.33.0, linux_amd64 linux_arm64

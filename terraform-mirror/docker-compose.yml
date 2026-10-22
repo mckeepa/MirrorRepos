@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  terraform-mirror:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/data:rw,z
+      - ./config:/config:rw,z
+    command: ["/bin/bash", "/usr/local/bin/mirror-terraform.sh"]
