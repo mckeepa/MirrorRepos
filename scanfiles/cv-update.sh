@@ -1,15 +1,17 @@
+#!/bin/bash
 
-# Create a directory on the host for the ClamAV database:
-mkdir -p /clamav-db
-sudo chown -R $(whoami):$(whoami) /clamav-db
-#Set correct permissions:
-chmod -R u+rwX /clamav-db
+# Update the local ClamAV signature database using cvdupdate.
+# Run before scanfiles.sh, and schedule it (e.g. daily via cron) so the
+# signatures stay current.
+#
+# One-off host prep (first time only):
+#   sudo mkdir -p /data/clamav-db
+#   sudo chown -R $(whoami):$(id -gn) /data/clamav-db
+#
+# Build the updater image once:  podman build -t cvdupdate ./scanfiles
+CLAMAV_DB="${CLAMAV_DB:-/data/clamav-db}"
 
-#If using SELinux, ensure correct context:
-sudo chcon -Rt container_file_t /clamav-db
-
-# Run the container and execute the update, mounting the directory:
 podman run --rm \
-  -v /clamav-db:/clamav-db:Z \
+  -v "$CLAMAV_DB":/clamav-db:Z \
   localhost/cvdupdate:latest \
-  /bin/sh -c "cvd update"
+  cvd update

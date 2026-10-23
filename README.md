@@ -1,26 +1,156 @@
-# RPM Repository Mirror
+# MirrorRepos — local mirrors for RPM packages and Terraform
 
-This project provides a Container-based solution for creating a mirror of an RPM repository. It includes all necessary scripts and configuration files to set up and run the repository synchronisation process.
+Containers that mirror public content onto local disk and serve it to
+machines that cannot (or should not) reach the internet:
 
+- **RPM repositories** — synced with `dnf reposync` (Rocky, EPEL, VS Code, ...)
+- **Terraform providers & modules** — mirrored from `registry.terraform.io`
+- **File scanning** — ClamAV scans files before they are served
+- **Web server** — Apache httpd exposes the mirrored content over HTTP(S)
 
-| Project Name     | Description                       |
-|------------------|-----------------------------------|
-|**Repo-Mirror-Base:** | Used as a base for `Repo-Mirror`, the base is fedora-minimal and including all updates from date the base image is created image.|
-|**Repo-Mirror:**  | Includes Script to register repos, and to download repos to a `/data/packages/`. This Directory is a mounted volume. |
-|**Terraform-Mirror:** | Mirrors Terraform providers from `registry.terraform.io` using `terraform providers mirror` into `/data/packages/terraform/`. Configured via `config/all.providers`. |
-|**scan files:**   | uses ClamAV to scan `/scan` directory and move files that fail into the `/quarantine`. Before Scanning ClamAv updates it's  database from the directory `/clamav-db`.  The three directories are passed in as volumes.|
-|**Web-Server:**   | Website to expose the downloaded files. Uses Apache HTTPD, exposed contents on `/data/packages/` from web server.|
+## How it fits together
 
+```mermaid
+flowchart LR
+    subgraph Internet
+        R[RPM repositories]
+        T[registry.terraform.io]
+    end
+    subgraph "Mirror host (podman)"
+        RM[repo-mirror]
+        TM[terraform-mirror]
+        WS[webserver httpd]
+    end
+    R --> RM
+    T --> TM
+    RM --> V[(host volume /data/repo/packages)]
+    TM --> V
+    V --> SC[scanfiles ClamAV]
+    SC --> Q[(quarantine /data/quarantine)]
+    V --> WS
+    WS --> C1[dnf clients]
+    WS --> C2[terraform clients]
+```
 
+## Components
 
+| Folder | Purpose | Base image | Writes to (container) |
+|---|---|---|---|
+| [repo-mirror-base](repo-mirror-base/) | Shared base image: fedora-minimal + dnf + cron | `quay.io/fedora/fedora-minimal:44-x86_64` | — |
+| [repo-mirror](repo-mirror/) | RPM repos via `dnf reposync` | `localhost/rpm-repo-mirror-base` | `/data/packages/<repoid>/` |
+| [terraform-mirror](terraform-mirror/) | Terraform providers + modules | `localhost/rpm-repo-mirror-base` | `/data/packages/terraform/` |
+| [scanfiles](scanfiles/) | ClamAV scan; failures quarantined | `python:3.12-alpine` | — |
+| [webserver](webserver/) | httpd serving the mirrored files | `httpd:alpine` | — |
+| webserverold/ | legacy, kept for reference | | |
 
-# Containers Used
-  - Mirror repos using DNF base => ` localhost/rpm-repo-mirror-base:latest` => `quay.io/fedora/fedora-minimal:43-x86_64`
-  - Mirror Terraform providers => `localhost/terraform-mirror` => `localhost/rpm-repo-mirror-base:latest`
-  - Scan files  =>  `python:3.12-alpine`
-  - Expose files via Web Server  => `httpd:alpine`
+Component docs: [terraform-mirror/readme.md](terraform-mirror/readme.md) ·
+[terraform-mirror/standalone.md](terraform-mirror/standalone.md) ·
+[scanfiles/readme.md](scanfiles/readme.md) ·
+[webserver/readme.md](webserver/readme.md)
 
+## Data and URL layout
 
+One host directory tree is shared by every container; the webserver serves it:
+
+| Content | On the host | In the container | Over HTTP |
+|---|---|---|---|
+| RPM repositories | `/data/repo/packages/<repoid>/` | `/data/packages/<repoid>/` | `http://<host>:8080/<repoid>/` |
+| Terraform mirror | `/data/repo/packages/terraform/` | `/data/packages/terraform/` | `http://<host>:8080/terraform/` |
+| Logs | `/data/log/` | `/var/log/` | — |
+| RPM repo config | `/data/config/` | `/config/` | — |
+| Terraform config | `/data/config-terraform/` | `/config/` | — |
+| ClamAV signatures | `/data/clamav-db/` | `/clamav-db/` | — |
+| ClamAV quarantine | `/data/quarantine/` | `/quarantine/` | — |
+
+(Host port 8080 → container 80 keeps podman rootless-friendly; adjust to taste.)
+
+## Quickstart
+
+```bash
+cd ~/MirrorRepos
+
+# 0. One-off host prep (first time only)
+sudo mkdir -p /data/repo /data/log /data/config /data/config-terraform /data/quarantine /data/clamav-db
+sudo cp -r repo-mirror/config/. /data/config/
+sudo cp -r terraform-mirror/config/. /data/config-terraform/
+# rootless podman must OWN these dirs to SELinux-relabel them (:z) —
+# without this, containers fail with "lsetxattr ... operation not permitted"
+sudo chown -R $USER:$USER /data/repo /data/log /data/config /data/config-terraform /data/quarantine /data/clamav-db
+
+# 1. Build the shared base image
+podman build -t rpm-repo-mirror-base ./repo-mirror-base
+
+# 2. Mirror RPM repositories (-d: runs detached via cron; logs: /data/log/mirror-repo.log)
+podman build -t rpm-repo-mirror ./repo-mirror
+podman run -d --replace -v /data/repo:/data:z -v /data/log:/var/log/:z \
+  -v /data/config:/config:z --name rpm-repo-mirror rpm-repo-mirror
+
+# 3. Mirror Terraform providers + modules
+podman build -t terraform-mirror ./terraform-mirror
+podman run -d --replace -v /data/repo:/data:z -v /data/log:/var/log/:z \
+  -v /data/config-terraform:/config:z --name terraform-mirror terraform-mirror
+
+# 4. Serve everything over HTTP (stock httpd image + our config + certs)
+#    (the httpscert mount is required — httpd.conf loads SSLCertificateFile
+#     from /httpscert and refuses to start without it; --replace reuses the
+#     container name if it already exists)
+podman run -d --replace --name webserver -p 8080:80 -p 8443:443 \
+  -v /data/repo/packages:/data/packages:ro,z \
+  -v $PWD/webserver/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro,z \
+  -v $PWD/webserver/httpscert:/httpscert:ro,z \
+  httpd:alpine
+
+# 4b. Open the firewall so other machines can reach the webserver
+sudo firewall-cmd --add-port=8080/tcp --add-port=8443/tcp --permanent
+sudo firewall-cmd --reload
+
+# 5. Optional: scan the mirrored files with ClamAV
+podman build -t cvdupdate ./scanfiles
+bash scanfiles/cv-update.sh    # download/update the signature DB (run daily)
+bash scanfiles/scanfiles.sh    # scan /data/repo/packages, quarantine failures
+```
+
+Verify — manually:
+
+```bash
+curl -s http://localhost:8080/ | head     # index of mirrored content
+curl -s http://localhost:8080/terraform/registry.terraform.io/hashicorp/aws/index.json
+```
+
+or run the verification script, which checks host tools, data directories,
+config files, SELinux, container images, **firewall rules**, the running
+webserver and the mirrored content. Failed checks are recapped with a ❌
+at the end:
+
+```bash
+bash verify-setup.sh          # check everything (read-only)
+bash verify-setup.sh --fix    # also repair what it can (opens the firewall ports; uses sudo)
+```
+
+> **Optional — rebuild with the latest packages.** The base image bakes in
+> `dnf update` at build time, so rebuild periodically to ship current
+> packages. Pull the upstream base first (so you get the newest Fedora),
+> then rebuild every layer with `--no-cache`:
+>
+> ```bash
+> podman pull quay.io/fedora/fedora-minimal:44-x86_64
+> podman build --no-cache -t rpm-repo-mirror-base ./repo-mirror-base
+> podman build --no-cache -t rpm-repo-mirror ./repo-mirror
+> podman build --no-cache -t terraform-mirror ./terraform-mirror
+> ```
+
+Clients then point at the mirror:
+
+- **dnf** — a `.repo` file with `baseurl=http://<host>:8080/<repoid>/`
+- **terraform** — `provider_installation { network_mirror { url = "http://<host>:8080/terraform/" } }`
+  in `~/.terraformrc`; modules are referenced as archive URLs.
+  See [terraform-mirror/readme.md — Client configuration](terraform-mirror/readme.md#client-configuration).
+
+Each component also ships a `run-me.sh`, `docker-compose.yml` and/or a
+systemd **quadlet** (`*.container`) for scheduled / run-as-a-service use —
+see the per-folder readmes for details.
+
+---
 
 ## Prerequisites
 
@@ -29,14 +159,15 @@ This project provides a Container-based solution for creating a mirror of an RPM
 
 ### Install Podman
 
-Allow rootless users to run containers is podman. 
+The mirrors are designed to run **rootless** under podman, using a
+dedicated service account.
 
-Referenced Site:  
- [RHEL allow rootless Containes in Podman](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/building_running_and_managing_containers/assembly_starting-with-containers_building-running-and-managing-containers#proc_upgrading-to-rootless-containers_assembly_starting-with-containers)
+Reference:
+[RHEL: allowing rootless containers in Podman](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/building_running_and_managing_containers/assembly_starting-with-containers_building-running-and-managing-containers#proc_upgrading-to-rootless-containers_assembly_starting-with-containers)
 
 Ensure Sub UIDs do not clash with other users.
 ```bash
-# check exisitong users
+# check existing users
 sudo cat /etc/subuid
 ```
 Allocate Sub UserIds
@@ -61,17 +192,17 @@ grep 'podman-repo-mirror' /etc/group
 
 Grant Group access to directories on the host
 ```bash
-sudo mkdir /data/repo-mirror
-sudo mkdir /data/log
+sudo mkdir -p /data/repo /data/log /data/config /data/config-terraform
 
-# The /data/config will be a mounted volume on /config in the contaner.
-# this is so the repos can be updated with rebuilding the container image. 
-sudo mkdir /data/config
-cp -r MirrorRepos/repo-mirror/config/ /data/
+# /data/config* are mounted at /config in the containers,
+# so mirror configs can be updated without rebuilding the images.
+sudo cp -r MirrorRepos/repo-mirror/config/. /data/config/
+sudo cp -r MirrorRepos/terraform-mirror/config/. /data/config-terraform/
 
-sudo chown -R repo-mirror-sv:podman-repo-mirror /data/repo-mirror
+sudo chown -R repo-mirror-sv:podman-repo-mirror /data/repo
 sudo chown -R repo-mirror-sv:podman-repo-mirror /data/log
 sudo chown -R repo-mirror-sv:podman-repo-mirror /data/config
+sudo chown -R repo-mirror-sv:podman-repo-mirror /data/config-terraform
 
 ```
 
@@ -79,14 +210,14 @@ sudo chown -R repo-mirror-sv:podman-repo-mirror /data/config
 |-----|---|------------|
 |d    |directory| |
 |r    |<span style="color:red;">Owner</span>| can read |
-|w    |<span style="color:red;">Owner</span>| can Write|
-|x    |<span style="color:red;">Owner</span> | can Execute files and list dir content|
-|r    |<span style="color:blue;">Group memebers</span> |can read|
-|-    |<span style="color:blue;">Group memebers</span> |can NOT write|
-|x    |<span style="color:blue;">Group memebers</span> |can Execute files and list dir content|
+|w    |<span style="color:red;">Owner</span>| can write|
+|x    |<span style="color:red;">Owner</span> | can execute files and list dir content|
+|r    |<span style="color:blue;">Group members</span> |can read|
+|-    |<span style="color:blue;">Group members</span> |can NOT write|
+|x    |<span style="color:blue;">Group members</span> |can execute files and list dir content|
 |r    |<span style="color:green;">Other users</span>|can read|
 |-    |<span style="color:green;">Other users</span>|can NOT write|
-|x    |<span style="color:green;">Other users</span>|can Execute files and list dir content|
+|x    |<span style="color:green;">Other users</span>|can execute files and list dir content|
 
 drwxr-xr-x. 2 root podman-repo-mirror
 
@@ -95,7 +226,7 @@ drwxr-xr-x. 2 root podman-repo-mirror
 ```bash
 # Verify Ownership has changed
 ls -la /data/
-ls -la /data/repo-mirror/
+ls -la /data/repo/
 ```
 
 ## repo-mirror Image Project Structure
@@ -188,16 +319,16 @@ tail -f /data/log/dnf5.log
 
 ### Results
 
-After running the container, the RPM repositories specified in `config/repo-config.repo` file will be synchronized to the `data` directory.
+After running the container, the RPM repositories listed in `config/all.repos`
+are synchronized under `/data/repo/packages/<repoid>/` on the host.
 
+## Build the Web Server
 
-# Build the Web Server
+Non-root containers cannot bind privileged ports (80/443). Options:
 
-Non-root can't use standard ports like 443 or 80, 
-sothe website could be: 
-  - run on the host and not in a container    
-  - run as root / privileged user
-  - Place a Proxy such as Nginx to 443    
+- map a high host port, e.g. `-p 8080:80` (used in the Quickstart above)
+- run httpd directly on the host — see [webserver/readme.md](webserver/readme.md)
+- place a proxy such as Nginx in front on 443    
 
 To srsolve the issue, update the iptable to route 443 to 8443
 
