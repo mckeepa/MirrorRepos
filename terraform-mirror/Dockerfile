@@ -3,8 +3,9 @@ FROM localhost/rpm-repo-mirror-base:latest
 # Terraform CLI version to install
 ARG TF_VERSION=1.9.8
 
-# Tools needed to fetch Terraform
-RUN dnf install -y curl unzip cronie && dnf clean all
+# Tools needed to fetch Terraform (openssl hashes the provider zips
+# for the network-mirror index files)
+RUN dnf install -y curl unzip cronie openssl && dnf clean all
 
 # Download and install the Terraform CLI
 RUN curl -fsSL -o /tmp/terraform.zip \

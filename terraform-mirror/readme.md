@@ -108,7 +108,7 @@ The container runs the mirror via cron and appends to `/var/log/mirror-terraform
 > (and for the corporate proxy allow-list), see [standalone.md](standalone.md).
 
 The same mirror scripts run directly on a VM — they only need `curl`,
-`unzip`, `tar` and the Terraform CLI. All paths are environment-overridable,
+`unzip`, `tar`, `openssl` and the Terraform CLI. All paths are environment-overridable,
 so the container behaviour is unchanged:
 
 | Variable | Default (container) | Purpose |
@@ -121,7 +121,7 @@ so the container behaviour is unchanged:
 ### Automated setup
 
 ```bash
-sudo dnf install -y curl unzip tar cronie
+sudo dnf install -y curl unzip tar cronie openssl
 sudo systemctl enable --now crond
 cd terraform-mirror
 sudo ./scripts/setup-host.sh
@@ -205,25 +205,40 @@ Modules are stored as plain archives:
 ```
 
 Because everything lands under `/data/packages/`, the existing `webserver`
-container exposes it over HTTP automatically.
+container exposes it over HTTP automatically, consistent with the mirrored
+RPM/rsync Linux packages:
+
+| Content | On disk | Over HTTP |
+|---|---|---|
+| RPM repositories | `/data/packages/<repoid>/` | `http(s)://<mirror-host>/<repoid>/` |
+| Terraform providers + modules | `/data/packages/terraform/` | `http(s)://<mirror-host>/terraform/` |
 
 ## Client configuration
 
+### Providers
+
 Consumers point their Terraform CLI at the mirror with a
 [CLI configuration file](https://developer.hashicorp.com/terraform/cli/config/config-file#provider-installation)
-(`terraform.rc` / `~/.terraformrc`):
+(`~/.terraformrc` on Linux/macOS, `terraform.rc` on Windows):
 
-Network mirror (via the webserver container):
+Network mirror (via the webserver — recommended):
 
 ```hcl
 provider_installation {
   network_mirror {
-    url = "http://<mirror-host>:8080/terraform/"
+    url = "https://<mirror-host>/terraform/"
   }
 }
 ```
 
-Filesystem mirror (direct access to the data volume):
+`mirror-terraform.sh` generates the two JSON documents the
+[network mirror protocol](https://developer.hashicorp.com/terraform/internals/provider-network-mirror-protocol)
+requires — `index.json` per provider and `<version>.json` per release,
+containing the `h1:` SHA-256 hashes Terraform records in
+`.terraform.lock.hcl` — so the plain httpd vhost is sufficient; no separate
+registry service is needed.
+
+Filesystem mirror (when the client machine can see the data volume directly):
 
 ```hcl
 provider_installation {
@@ -233,17 +248,22 @@ provider_installation {
 }
 ```
 
+Then `terraform init` as usual; the CLI fetches providers from the mirror.
+
 ### Modules
 
 Modules have no `provider_installation` equivalent; reference the mirrored
-archive directly as the module source:
+archive directly as the module source. Terraform detects the archive from the
+`.tar.gz` extension, downloads and extracts it:
 
 ```hcl
 module "vpc" {
-  source = "https://<mirror-host>:8080/terraform/modules/terraform-aws-modules/vpc/aws/5.13.0/vpc-5.13.0.tar.gz"
+  source = "https://<mirror-host>/terraform/modules/terraform-aws-modules/vpc/aws/5.13.0/vpc-5.13.0.tar.gz"
+  # ...
 }
 ```
 
-Terraform downloads and extracts the archive. The mirrored archives are
-packed with the module `.tf` files at the root, so no `//subdir` suffix is
-needed.
+- The version is part of the URL — there is no registry-style `version`
+  argument, so each `module` block pins exactly what it gets.
+- The mirrored archives are packed with the module `.tf` files at the root,
+  so no `//subdir` suffix is needed.

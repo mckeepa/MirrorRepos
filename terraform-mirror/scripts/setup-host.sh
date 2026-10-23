@@ -30,10 +30,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
 # ---- prerequisites -----------------------------------------------------------
-for cmd in curl unzip tar; do
+for cmd in curl unzip tar openssl; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         echo "ERROR: '$cmd' is required. Install it first, e.g.:"
-        echo "  sudo dnf install -y curl unzip tar"
+        echo "  sudo dnf install -y curl unzip tar openssl"
         exit 1
     fi
 done
