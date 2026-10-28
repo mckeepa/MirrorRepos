@@ -1,0 +1,87 @@
+module,version
+# Versions below are taken from data/packages/terraform/modules directory names.
+terraform-aws-modules/vpc/aws, 5.13.0
+terraform-aws-modules/vpc/aws, 5.8.1
+terraform-aws-modules/security-group/aws, 6.0.0
+# Disabled in all.modules; retained from its existing explicit pin and not downloaded.
+# terraform-aws-modules/eks/aws, 20.24.0
+
+# --- Azure ---
+Azure/lz-vending/azurerm, 7.0.3
+Azure/avm-res-network-virtualnetwork/azurerm, 0.22.3
+Azure/avm-res-web-serverfarm/azurerm, 2.0.8
+Azure/avm-res-web-site/azurerm, 0.24.1
+Azure/avm-res-sql-managedinstance/azurerm, 0.3.1
+Azure/naming/azurerm, 0.4.4
+Azure/regions/azurerm, 0.8.2
+
+# --- Published AVM modules from requested ---
+Azure/avm-res-app-containerapp/azurerm, 0.9.0
+Azure/avm-res-authorization-roleassignment/azurerm, 0.3.1
+Azure/avm-res-certificateregistration-certificateorder/azurerm, 0.1.0
+Azure/avm-res-cognitiveservices-account/azurerm, 0.11.1
+Azure/avm-res-compute-disk/azurerm, 0.5.0
+Azure/avm-res-compute-diskencryptionset/azurerm, 0.1.1
+Azure/avm-res-compute-gallery/azurerm, 0.3.0
+Azure/avm-res-compute-hostgroup/azurerm, 0.3.0
+Azure/avm-res-compute-proximityplacementgroup/azurerm, 0.1.0
+Azure/avm-res-compute-sshpublickey/azurerm, 0.3.0
+Azure/avm-res-compute-virtualmachine/azurerm, 0.21.0
+Azure/avm-res-compute-virtualmachinescaleset/azurerm, 0.11.1
+Azure/avm-res-containerinstance-containergroup/azurerm, 0.2.0
+Azure/avm-res-containerregistry-registry/azurerm, 0.8.0
+Azure/avm-res-containerservice-managedcluster/azurerm, 0.8.6
+Azure/avm-res-dbforpostgresql-flexibleserver/azurerm, 0.2.3
+Azure/avm-res-desktopvirtualization-applicationgroup/azurerm, 0.3.0
+Azure/avm-res-desktopvirtualization-hostpool/azurerm, 0.6.0
+Azure/avm-res-desktopvirtualization-scalingplan/azurerm, 0.4.0
+Azure/avm-res-desktopvirtualization-workspace/azurerm, 0.3.0
+Azure/avm-res-devcenter-devcenter/azurerm, 0.2.0
+Azure/avm-res-devopsinfrastructure-pool/azurerm, 0.3.2
+Azure/avm-res-documentdb-databaseaccount/azurerm, 0.12.0
+Azure/avm-res-eventgrid-domain/azurerm, 0.1.0
+Azure/avm-res-eventgrid-namespace/azurerm, 0.1.2
+Azure/avm-res-eventgrid-topic/azurerm, 0.1.1
+Azure/avm-res-eventhub-namespace/azurerm, 0.1.1
+Azure/avm-res-insights-actiongroup/azurerm, 0.1.0
+Azure/avm-res-insights-activitylogalert/azurerm, 0.2.0
+Azure/avm-res-insights-autoscalesetting/azurerm, 0.1.2
+Azure/avm-res-insights-component/azurerm, 0.5.0
+Azure/avm-res-insights-datacollectionendpoint/azurerm, 0.2.0
+Azure/avm-res-insights-datacollectionrule/azurerm, 0.1.0
+Azure/avm-res-keyvault-vault/azurerm, 0.12.0
+Azure/avm-res-kusto-cluster/azurerm, 0.2.0
+Azure/avm-res-logic-workflow/azurerm, 0.2.0
+Azure/avm-res-managedidentity-userassignedidentity/azurerm, 0.6.0
+Azure/avm-res-network-applicationgateway/azurerm, 0.6.0
+Azure/avm-res-network-applicationsecuritygroup/azurerm, 0.2.0
+Azure/avm-res-network-bastionhost/azurerm, 0.9.0
+Azure/avm-res-network-connection/azurerm, 0.3.0
+Azure/avm-res-network-ddosprotectionplan/azurerm, 0.3.0
+Azure/avm-res-network-frontdoorwebapplicationfirewallpolicy/azurerm, 0.1.1
+Azure/avm-res-network-natgateway/azurerm, 0.3.2
+Azure/avm-res-network-networkinterface/azurerm, 0.2.0
+Azure/avm-res-network-networkmanager/azurerm, 0.4.0
+Azure/avm-res-network-networksecuritygroup/azurerm, 0.6.0
+Azure/avm-res-network-networkwatcher/azurerm, 0.3.2
+Azure/avm-res-network-privateendpoint/azurerm, 0.3.0
+Azure/avm-res-network-privatednszone/azurerm, 0.5.0
+Azure/avm-res-network-publicipaddress/azurerm, 0.2.1
+Azure/avm-res-network-publicipprefix/azurerm, 0.2.0
+Azure/avm-res-network-routetable/azurerm, 0.6.0
+Azure/avm-res-network-trafficmanagerprofile/azurerm, 0.1.1
+Azure/avm-res-operationalinsights-workspace/azurerm, 0.5.1
+Azure/avm-res-portal-dashboard/azurerm, 0.2.0
+Azure/avm-res-recoveryservices-vault/azurerm, 1.4.0
+Azure/avm-res-redhatopenshift-openshiftcluster/azurerm, 0.0.3
+Azure/avm-res-resourcegraph-query/azurerm, 0.1.0
+Azure/avm-res-resources-resourcegroup/azurerm, 0.4.0
+Azure/avm-res-servicebus-namespace/azurerm, 0.5.0
+Azure/avm-res-sql-server/azurerm, 0.2.1
+Azure/avm-res-sqlvirtualmachine-sqlvirtualmachine/azurerm, 0.0.1
+Azure/avm-res-storage-storageaccount/azurerm, 0.10.0
+Azure/avm-res-web-connection/azurerm, 0.1.0
+Azure/avm-res-web-hostingenvironment/azurerm, 2.0.1
+Azure/avm-res-web-staticsite/azurerm, 0.6.2
+Azure/avm-utl-network-ip-addresses/azurerm, 0.1.1
+Azure/avm-utl-regions/azurerm, 0.13.2
